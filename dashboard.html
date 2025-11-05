@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📬</text></svg>">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .bg-play {
+            background-image: url('https://files.catbox.moe/6rruxl.jpeg');
+            animation: slowMove 30s ease-in-out infinite;
+        }
+
+        .bg-inbox {
+            background-image: url('https://files.catbox.moe/f2hr3g.jpeg');
+            animation: slowMove 30s ease-in-out infinite;
+        }
+
+        @keyframes slowMove {
+            0%, 100% { transform: scale(1) translate(0, 0); }
+            25% { transform: scale(1.05) translate(1%, -1%); }
+            50% { transform: scale(1.08) translate(-1%, 1%); }
+            75% { transform: scale(1.05) translate(1%, 1%); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 20px;
+            gap: 48px;
+            position: relative;
+        }
+
+        .tab {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .tab.active {
+            color: #ffffff;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #60a5fa, #93c5fd);
+            border-radius: 2px;
+        }
+
+        .tab.active.inbox-tab::after {
+            background: linear-gradient(90deg, #f97316, #fbbf24);
+        }
+
+        .logout-btn {
+            position: absolute;
+            right: 20px;
+            top: 24px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .content {
+            flex: 1;
+            padding: 0 20px 40px;
+            display: none;
+        }
+
+        .content.active {
+            display: flex;
+        }
+
+        .content.play-content {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .content.inbox-content {
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            justify-content: flex-start;
+        }
+
+        .content.inbox-content.loading {
+            justify-content: center;
+        }
+
+        /* PLAY TAB STYLES */
+        .profile-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 40px 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .avatar svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+
+        .username {
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .cta-text {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+            margin-bottom: 28px;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .link-box {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 15px;
+            word-break: break-all;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.35s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn-copy {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1e40af;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-copy svg {
+            fill: #1e40af;
+        }
+
+        .btn-copy:active {
+            background: #ffffff;
+            transform: scale(0.98);
+        }
+
+        .btn-share {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-share svg {
+            fill: white;
+        }
+
+        .btn-share:active {
+            transform: scale(0.98);
+        }
+
+        /* INBOX TAB STYLES */
+        .inbox-wrapper {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .inbox-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 20px;
+        }
+
+        .inbox-loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #f97316;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .inbox-loading-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .message-item:active {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0.98);
+        }
+
+        .message-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #f97316, #fbbf24);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .message-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .message-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .message-label {
+            color: #ffffff;
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .message-time {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .message-arrow {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 17px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            line-height: 1.6;
+        }
+
+        /* MODAL STYLES */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://files.catbox.moe/f2hr3g.jpeg');
+            background-size: cover;
+            background-position: center;
+            animation: slowMove 30s ease-in-out infinite;
+            filter: blur(10px);
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+
+        .modal-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 500px;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #f97316, #fbbf24);
+            padding: 28px 24px;
+            border-radius: 24px 24px 0 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.25);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 300;
+        }
+
+        .modal-close:active {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(0.95);
+        }
+
+        .modal-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            background: white;
+            padding: 36px 28px;
+            border-radius: 0 0 24px 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .message-text {
+            color: #1e293b;
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        /* LOADING SPINNER */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #60a5fa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* NOTIFICATION */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f97316, #fbbf24);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+            z-index: 9998;
+            display: none;
+            animation: slideInRight 0.4s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .notification-text {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 20px;
+                gap: 40px;
+            }
+            
+            .tab {
+                font-size: 18px;
+            }
+            
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            .profile-card {
+                padding: 36px 24px;
+            }
+            
+            .username {
+                font-size: 24px;
+            }
+            
+            .cta-text {
+                font-size: 15px;
+            }
+            
+            .link-box {
+                font-size: 14px;
+                padding: 14px 16px;
+            }
+            
+            .btn {
+                padding: 14px;
+                font-size: 14px;
+            }
+            
+            .message-item {
+                padding: 16px;
+            }
+            
+            .message-icon {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .message-label {
+                font-size: 16px;
+            }
+            
+            .modal-body {
+                padding: 32px 24px;
+            }
+            
+            .message-text {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="notification" id="notification">
+        <div class="notification-title">📬 New Message!</div>
+        <div class="notification-text">You have received a new anonymous message</div>
+    </div>
+
+    <div class="background bg-play" id="background"></div>
+    
+    <div class="container">
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+        
+        <div class="header">
+            <div class="tab active" onclick="switchTab('play')">PLAY</div>
+            <div class="tab inbox-tab" onclick="switchTab('inbox')">INBOX</div>
+        </div>
+
+        <!-- PLAY TAB -->
+        <div class="content active play-content" id="playContent">
+            <div class="profile-card">
+                <div class="avatar">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </div>
+                <div class="username" id="displayUsername">@username</div>
+                <p class="cta-text">Kirimi aku pesan anonim!</p>
+                
+                <div class="link-box" id="shareLink">
+                    Loading...
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-copy" onclick="copyLink()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                        </svg>
+                        Copy Link
+                    </button>
+                    <button class="btn btn-share" onclick="shareLink()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                        </svg>
+                        Share
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- INBOX TAB -->
+        <div class="content inbox-content loading" id="inboxContent">
+            <div class="inbox-loading" id="inboxLoading">
+                <div class="spinner"></div>
+                <div class="inbox-loading-text">Loading messages...</div>
+            </div>
+            <div class="inbox-wrapper" id="inboxWrapper" style="display: none;">
+                <div class="message-list" id="messageList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MESSAGE MODAL -->
+    <div class="modal" id="messageModal">
+        <div class="modal-bg"></div>
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal()">×</button>
+                <div class="modal-title">kirimi aku pesan anonim!</div>
+            </div>
+            <div class="modal-body">
+                <p class="message-text" id="modalMessageText"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Hide loading spinner when page is fully loaded
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 500);
+            
+            // Add logout button listener after DOM is ready
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+            }
+        });
+
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4l9WzAxmUJ_B--eT_69YPXbmpH7UjHrE",
+            authDomain: "ngl-lit.firebaseapp.com",
+            projectId: "ngl-lit",
+            storageBucket: "ngl-lit.firebasestorage.app",
+            messagingSenderId: "893548102607",
+            appId: "1:893548102607:web:b28bb1c2590c3e20adc8ba",
+            measurementId: "G-HNM7BVNVGL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let messagesUnsubscribe = null;
+        let lastMessageCount = 0;
+        let notificationPermission = false;
+        let allMessages = []; // Store all messages
+
+        // Request notification permission
+        async function requestNotificationPermission() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                notificationPermission = permission === 'granted';
+            }
+        }
+
+        // Check auth state
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'auth.html';
+                return;
+            }
+            
+            currentUser = user;
+            
+            // Request notification permission
+            await requestNotificationPermission();
+            
+            // Load user data
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                document.getElementById('displayUsername').textContent = '@' + userData.username;
+                document.getElementById('shareLink').textContent = window.location.origin + '/send-message.html?to=' + user.uid;
+            }
+            
+            // Listen to messages in real-time
+            loadMessages();
+        });
+
+        function loadMessages() {
+            if (!currentUser) return;
+            
+            const messagesRef = collection(db, 'messages', currentUser.uid, 'inbox');
+            const q = query(messagesRef, orderBy('timestamp', 'desc'));
+            
+            messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+                const messages = [];
+                snapshot.forEach((doc) => {
+                    messages.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Store all messages
+                allMessages = messages;
+                
+                // Check for new messages
+                if (lastMessageCount > 0 && messages.length > lastMessageCount) {
+                    showNotification();
+                    showBrowserNotification();
+                }
+                lastMessageCount = messages.length;
+                
+                renderMessages(messages);
+            }, (error) => {
+                console.error('Error loading messages:', error);
+            });
+        }
+
+        function renderMessages(messages, showAll = false) {
+            const inboxLoading = document.getElementById('inboxLoading');
+            const inboxWrapper = document.getElementById('inboxWrapper');
+            const messageList = document.getElementById('messageList');
+            
+            // Hide loading, show content
+            if (inboxLoading) inboxLoading.style.display = 'none';
+            if (inboxWrapper) inboxWrapper.style.display = 'block';
+            
+            if (messages.length === 0) {
+                messageList.innerHTML = '<div class="empty-state">Belum ada pesan masuk.<br>Bagikan link kamu untuk menerima pesan anonim!</div>';
+                return;
+            }
+            
+            // Optimize: Only show first 20 messages unless showAll is true
+            const displayMessages = showAll ? messages : messages.slice(0, 20);
+            
+            messageList.innerHTML = displayMessages.map(msg => {
+                const date = new Date(msg.timestamp);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                
+                let timeText = '';
+                if (diffDays === 0) {
+                    timeText = 'Today';
+                } else if (diffDays === 1) {
+                    timeText = 'Yesterday';
+                } else {
+                    timeText = diffDays + ' days ago';
+                }
+                
+                return `
+                    <div class="message-item" data-message-id="${msg.id}" data-message-text="${msg.text.replace(/"/g, '&quot;')}">
+                        <div class="message-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                            </svg>
+                        </div>
+                        <div class="message-info">
+                            <div class="message-label">Pesan Baru!</div>
+                            <div class="message-time">${timeText}</div>
+                        </div>
+                        <div class="message-arrow">›</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add click listeners to message items
+            document.querySelectorAll('.message-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const messageId = this.getAttribute('data-message-id');
+                    const messageText = this.getAttribute('data-message-text');
+                    openMessage(messageId, messageText);
+                });
+            });
+
+            // Add load more button if there are more messages and not showing all
+            if (!showAll && messages.length > 20) {
+                const loadMoreDiv = document.createElement('div');
+                loadMoreDiv.style.cssText = 'text-align: center; padding: 20px;';
+                loadMoreDiv.innerHTML = `
+                    <button id="loadMoreBtn" style="padding: 12px 24px; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; color: white; cursor: pointer; font-family: Inter, sans-serif; font-size: 14px;">
+                        Load More (${messages.length - 20} messages)
+                    </button>
+                `;
+                messageList.appendChild(loadMoreDiv);
+                
+                document.getElementById('loadMoreBtn').addEventListener('click', function() {
+                    loadAllMessages();
+                });
+            }
+        }
+
+        function loadAllMessages() {
+            renderMessages(allMessages, true);
+        }
+
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.content');
+            const background = document.getElementById('background');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'play') {
+                tabs[0].classList.add('active');
+                const playContent = document.getElementById('playContent');
+                playContent.classList.add('active');
+                background.className = 'background bg-play';
+            } else {
+                tabs[1].classList.add('active');
+                const inboxContent = document.getElementById('inboxContent');
+                inboxContent.classList.add('active');
+                inboxContent.classList.remove('loading');
+                background.className = 'background bg-inbox';
+            }
+        }
+
+        function openMessage(id, text) {
+            document.getElementById('modalMessageText').textContent = text;
+            document.getElementById('messageModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('messageModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('show');
+            
+            // Play sound if available
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWm98OScSgwPUKXh8blrHgU7k9v0yHknBSh+zPLaizsKGGG36+mjUBELTKXh8bllHAU2jdXzxnYnByx+zPDaj0ALFmG36eejThEMTqvk8rZnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkALFl226eejTxEMTqzl87RnHQY7ldz0xXYnBSh9y/DajkAL');
+                audio.play();
+            } catch (e) {}
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function copyLink() {
+            const link = document.getElementById('shareLink').textContent.trim();
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Link berhasil disalin! ✨');
+            }).catch(() => {
+                alert('Link: ' + link);
+            });
+        }
+
+        function shareLink() {
+            const link = document.getElementById('shareLink').textContent.trim();
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Send me anonymous messages!',
+                    text: 'Kirimi aku pesan anonim!',
+                    url: link
+                }).catch(() => {});
+            } else {
+                alert('Share link: ' + link);
+            }
+        }
+
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    if (messagesUnsubscribe) {
+                        messagesUnsubscribe();
+                    }
+                    await signOut(auth);
+                    window.location.href = 'auth.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    alert('Failed to logout. Please try again.');
+                }
+            }
+        }
+
+        // Make functions global
+        window.switchTab = switchTab;
+        window.openMessage = openMessage;
+        window.closeModal = closeModal;
+        window.copyLink = copyLink;
+        window.shareLink = shareLink;
+        window.logout = logout;
+        window.loadAllMessages = loadAllMessages;
+    </script>
+</body>
+</html>
